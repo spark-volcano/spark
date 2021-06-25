@@ -26,6 +26,7 @@ import scala.util.control.NonFatal
 import io.fabric8.kubernetes.api.model._
 import io.fabric8.kubernetes.client.{KubernetesClient, Watch}
 import io.fabric8.kubernetes.client.Watcher.Action
+import sh.volcano.scheduling._
 
 import org.apache.spark.SparkConf
 import org.apache.spark.deploy.SparkApplication
@@ -147,7 +148,22 @@ private[spark] class Client(
     try {
       val otherKubernetesResources = resolvedDriverSpec.driverKubernetesResources ++ Seq(configMap)
       addOwnerReference(createdDriverPod, otherKubernetesResources)
-      kubernetesClient.resourceList(otherKubernetesResources: _*).createOrReplace()
+      var commonResources = Seq.empty[HasMetadata]
+      for (resource <- otherKubernetesResources) {
+        logInfo(s"resource " +
+          s"${resource.getMetadata().getNamespace}/${resource.getMetadata().getName}," +
+          s" apiVersion ${resource.getApiVersion}, kind ${resource.getKind},")
+
+        if (resource.isInstanceOf[PodGroup]) {
+          val pg = resource.asInstanceOf[PodGroup]
+          val pgClient = v1beta1.getClient(kubernetesClient, pg.getMetadata.getNamespace)
+          pgClient.createOrReplace(pg)
+        } else {
+          commonResources = commonResources ++ Seq(resource)
+        }
+      }
+
+      kubernetesClient.resourceList(commonResources: _*).createOrReplace()
     } catch {
       case NonFatal(e) =>
         kubernetesClient.pods().delete(createdDriverPod)

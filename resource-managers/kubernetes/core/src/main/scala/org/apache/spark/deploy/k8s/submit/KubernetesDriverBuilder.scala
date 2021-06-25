@@ -42,6 +42,10 @@ private[spark] class KubernetesDriverBuilder {
         Utils.classForName(className).newInstance().asInstanceOf[KubernetesFeatureConfigStep]
       }
 
+    val volcanoFeature = if (conf.get(Config.KUBERNETES_VOLCANO_ENABLE)) {
+      Seq(volcanoStep(kubernetesConf))
+    } else Nil
+
     val features = Seq(
       new BasicDriverFeatureStep(conf),
       new DriverKubernetesCredentialsFeatureStep(conf),
@@ -53,7 +57,11 @@ private[spark] class KubernetesDriverBuilder {
       new HadoopConfDriverFeatureStep(conf),
       new KerberosConfDriverFeatureStep(conf),
       new PodTemplateConfigMapStep(conf),
-      new LocalDirsFeatureStep(conf)) ++ userFeatures
+      new LocalDirsFeatureStep(conf),
+      new VolcanoFeatureStep(conf)
+    ) ++ userFeatures ++ volcanoFeature
+
+
 
     val spec = KubernetesDriverSpec(
       initialPod,

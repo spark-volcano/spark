@@ -46,13 +46,17 @@ private[spark] class KubernetesExecutorBuilder {
         Utils.classForName(className).newInstance().asInstanceOf[KubernetesFeatureConfigStep]
       }
 
+    val volcanoFeature = if (conf.get(Config.KUBERNETES_VOLCANO_ENABLE)) {
+      Seq(volcanoStep(conf))
+    } else Nil
+
     val features = Seq(
       new BasicExecutorFeatureStep(conf, secMgr, resourceProfile),
       new ExecutorKubernetesCredentialsFeatureStep(conf),
       new MountSecretsFeatureStep(conf),
       new EnvSecretsFeatureStep(conf),
       new MountVolumesFeatureStep(conf),
-      new LocalDirsFeatureStep(conf)) ++ userFeatures
+      new LocalDirsFeatureStep(conf)) ++ userFeatures ++ volcanoFeature
 
     val spec = KubernetesExecutorSpec(
       initialPod,

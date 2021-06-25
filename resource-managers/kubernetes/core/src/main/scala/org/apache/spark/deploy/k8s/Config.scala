@@ -22,6 +22,7 @@ import org.apache.spark.deploy.k8s.Constants._
 import org.apache.spark.internal.Logging
 import org.apache.spark.internal.config.{PYSPARK_DRIVER_PYTHON, PYSPARK_PYTHON}
 import org.apache.spark.internal.config.ConfigBuilder
+import org.apache.spark.network.util.ByteUnit
 
 private[spark] object Config extends Logging {
 
@@ -492,6 +493,8 @@ private[spark] object Config extends Logging {
       .createWithDefault(false)
 
   val KUBERNETES_NODE_SELECTOR_PREFIX = "spark.kubernetes.node.selector."
+  val KUBERNETES_DRIVER_NODE_SELECTOR_PREFIX = "spark.kubernetes.driver.node.selector."
+  val KUBERNETES_EXECUTOR_NODE_SELECTOR_PREFIX = "spark.kubernetes.executor.node.selector."
 
   val KUBERNETES_DELETE_EXECUTORS =
     ConfigBuilder("spark.kubernetes.executor.deleteOnTermination")
@@ -571,4 +574,35 @@ private[spark] object Config extends Logging {
   val KUBERNETES_VOLUMES_OPTIONS_SERVER_KEY = "options.server"
 
   val KUBERNETES_DRIVER_ENV_PREFIX = "spark.kubernetes.driverEnv."
+
+  val KUBERNETES_VOLCANO_ENABLE =
+    ConfigBuilder("spark.kubernetes.volcano.enable")
+      .doc("volcano scheduling enabled or not")
+      .booleanConf
+      .createWithDefault(false)
+
+  val KUBERNETES_VOLCANO_QUEUE =
+    ConfigBuilder("spark.kubernetes.volcano.queue")
+      .doc("queue for this podgroup")
+      .stringConf
+      .createWithDefault("default")
+
+  val KUBERNETES_VOLCANO_SCHEDULER_NAME =
+    ConfigBuilder("spark.kubernetes.volcano.schedulerName")
+      .doc("scheduler name of volcano")
+      .stringConf
+      .createWithDefault("volcano")
+
+  val KUBERNETES_VOLCANO_PODGROUP_ANNOTATION_PREFIX =
+    "spark.kubernetes.volcano.podgroup.annotation."
+
+  val KUBERNETES_VOLCANO_PODGROUP_MEMORY = ConfigBuilder("spark.kubernetes.volcano.podgroup.memory")
+    .doc("Amount of memory to use for the podgroup minResource, in MiB unless otherwise specified.")
+    .bytesConf(ByteUnit.MiB)
+    .createWithDefaultString("3g")
+
+  val KUBERNETES_VOLCANO_PODGROUP_CPU = ConfigBuilder("spark.kubernetes.volcano.podgroup.cpu")
+    .doc("Amount of cpu to use for the podgroup minResource")
+    .doubleConf
+    .createWithDefault(2.0)
 }
