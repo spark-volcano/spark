@@ -17,29 +17,27 @@
 
 package org.apache.spark.deploy.k8s.features
 
-import java.util
-
-import scala.collection.JavaConversions._
 import scala.collection.JavaConverters._
+
 import io.fabric8.kubernetes.api.model.{HasMetadata, ObjectMeta, PodBuilder, Quantity, QuantityBuilder}
 import sh.volcano.scheduling.{PodGroup, PodGroupSpec, PodGroupStatus, v1beta1}
-import org.apache.spark.deploy.k8s.{KubernetesConf, KubernetesDriverSpecificConf, KubernetesRoleSpecificConf, KubernetesUtils, SparkPod}
+
+import org.apache.spark.deploy.k8s.{KubernetesConf, KubernetesExecutorConf, KubernetesUtils, SparkPod}
 import org.apache.spark.deploy.k8s.Config._
 
-private[spark] class VolcanoFeatureStep(
-                                         kubernetesConf: KubernetesConf[_ <: KubernetesRoleSpecificConf])
+private[spark] class VolcanoFeatureStep(kubernetesConf: KubernetesConf)
   extends KubernetesFeatureConfigStep {
 
   private val conf = kubernetesConf.sparkConf
-  private val podGroupName = s"${kubernetesConf.appResourceNamePrefix}-podgroup"
+  private val podGroupName = s"${kubernetesConf.resourceNamePrefix}-podgroup"
   private val deployModeKey = "spark.submit.deployMode"
   private val clusterMode = "cluster"
 
   override def configurePod(pod: SparkPod): SparkPod = {
-    val isDriver = kubernetesConf.roleSpecificConf.isInstanceOf[KubernetesDriverSpecificConf]
-    val roleName = if (isDriver) v1beta1.VOLCANO_ROLE_DRIVER else v1beta1.VOLCANO_ROLE_EXECUTOR
-    val isClusterMode = (clusterMode == kubernetesConf.sparkConf.get(deployModeKey, clusterMode))
-
+    val roleName = kubernetesConf match {
+      case _: KubernetesExecutorConf => v1beta1.VOLCANO_ROLE_EXECUTOR
+      case _ => v1beta1.VOLCANO_ROLE_DRIVER
+    }
     val schedulerName = conf.get(KUBERNETES_VOLCANO_SCHEDULER_NAME)
     val k8sPodBuilder = new PodBuilder(pod.pod)
       .editMetadata()
@@ -81,7 +79,7 @@ private[spark] class VolcanoFeatureStep(
     val meta = new ObjectMeta()
     meta.setAnnotations(podGroupAnnotations.asJava)
     meta.setName(podGroupName)
-    meta.setNamespace(kubernetesConf.namespace())
+    meta.setNamespace(conf.get(KUBERNETES_NAMESPACE))
 
     val podGroupSpec = new PodGroupSpec()
     podGroupSpec.setMinMember(1)

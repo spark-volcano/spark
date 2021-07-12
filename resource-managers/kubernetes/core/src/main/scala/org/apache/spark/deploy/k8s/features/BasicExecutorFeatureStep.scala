@@ -259,8 +259,8 @@ private[spark] class BasicExecutorFeatureStep(
         .build()
     }
 
-    val executorSpecifiedLabel = KubernetesUtils.parsePrefixedKeyValuePairs(kubernetesConf.sparkConf,
-      KUBERNETES_EXECUTOR_NODE_SELECTOR_PREFIX)
+    val executorSpecifiedLabel = KubernetesUtils.parsePrefixedKeyValuePairs(
+      kubernetesConf.sparkConf, KUBERNETES_EXECUTOR_NODE_SELECTOR_PREFIX)
 
     val executorPodBuilder = new PodBuilder(pod.pod)
       .editOrNewMetadata()

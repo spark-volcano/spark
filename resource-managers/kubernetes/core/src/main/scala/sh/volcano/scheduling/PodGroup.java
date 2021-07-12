@@ -17,17 +17,18 @@
 package sh.volcano.scheduling;
 
 import io.fabric8.kubernetes.client.CustomResource;
+import io.fabric8.kubernetes.model.annotation.Version;
+import io.fabric8.kubernetes.model.annotation.Group;
+import io.fabric8.kubernetes.model.annotation.Kind;
 
 /**
  */
-public class PodGroup extends CustomResource {
+@Version(v1beta1.POD_GROUP_GROUP_APIVERSION)
+@Group(v1beta1.POD_GROUP)
+@Kind(v1beta1.POD_GROUP_KIND)
+public class PodGroup extends CustomResource<PodGroupSpec, PodGroupStatus> {
     private PodGroupSpec spec;
     private PodGroupStatus status;
-
-    {
-        this.setApiVersion(v1beta1.POD_GROUP_GROUP_APIVERSION);
-        this.setKind(v1beta1.POD_GROUP_KIND);
-    }
 
     @Override
     public String toString() {

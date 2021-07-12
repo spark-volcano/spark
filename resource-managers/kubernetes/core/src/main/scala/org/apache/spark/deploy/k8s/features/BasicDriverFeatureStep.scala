@@ -138,7 +138,8 @@ private[spark] class BasicDriverFeatureStep(conf: KubernetesDriverConf)
         .endResources()
       .build()
 
-    val driverSpecifiedLabel = KubernetesUtils.parsePrefixedKeyValuePairs(conf.sparkConf, KUBERNETES_DRIVER_NODE_SELECTOR_PREFIX)
+    val driverSpecifiedLabel = KubernetesUtils.parsePrefixedKeyValuePairs(conf.sparkConf,
+      KUBERNETES_DRIVER_NODE_SELECTOR_PREFIX)
 
     val driverPod = new PodBuilder(pod.pod)
       .editOrNewMetadata()
