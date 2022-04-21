@@ -134,6 +134,8 @@ jobs:
         if: failure()
         run: |
           kubectl logs $(kubectl get po -nvolcano-system | grep volcano-scheduler |cut -d" " -f1) -nvolcano-system > volcano-scheduler.log
+          kubectl logs $(kubectl get po -nvolcano-system | grep volcano-admission |cut -d" " -f1 | grep -v init) -nvolcano-system > volcano-admission.log
+          kubectl logs $(kubectl get po -nvolcano-system | grep volcano-controllers |cut -d" " -f1) -nvolcano-system > volcano-controllers.log
           kubectl get pod -A
           kubectl describe node
 
@@ -144,4 +146,4 @@ jobs:
           name: spark-on-kubernetes-it-log
           path: |
             **/target/integration-tests.log
-            **/volcano-scheduler.log
+            **/volcano-*.log
